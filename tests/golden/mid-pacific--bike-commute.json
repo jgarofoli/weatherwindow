@@ -1,0 +1,82 @@
+{
+ "fixture": "forecast-mid-pacific.json",
+ "preset": "bike-commute",
+ "nowT": 1789791297,
+ "minHours": 1,
+ "hours": 192,
+ "pattern": "1111111111111122222211111111111111222221222221111111111112222111121111PPPPP111111111111222111111122111211111111111111111111111111111111111111111111111111111111111111111122222111122222222222222",
+ "windows": [
+  {
+   "startIdx": 70,
+   "endIdx": 74,
+   "hours": 5,
+   "startT": 1789894800,
+   "endT": 1789909200
+  }
+ ],
+ "best": {
+  "startIdx": 70,
+  "endIdx": 74,
+  "hours": 5,
+  "startT": 1789894800,
+  "endT": 1789909200
+ },
+ "nearMisses": [
+  {
+   "startIdx": 45,
+   "endIdx": 56,
+   "hours": 12,
+   "blockingRuleId": "dry",
+   "failCount": 12
+  },
+  {
+   "startIdx": 61,
+   "endIdx": 64,
+   "hours": 4,
+   "blockingRuleId": "apparent",
+   "failCount": 4
+  },
+  {
+   "startIdx": 75,
+   "endIdx": 86,
+   "hours": 12,
+   "blockingRuleId": "apparent",
+   "failCount": 12
+  },
+  {
+   "startIdx": 90,
+   "endIdx": 96,
+   "hours": 7,
+   "blockingRuleId": "apparent",
+   "failCount": 7
+  },
+  {
+   "startIdx": 99,
+   "endIdx": 101,
+   "hours": 3,
+   "blockingRuleId": "dry",
+   "failCount": 3
+  },
+  {
+   "startIdx": 103,
+   "endIdx": 104,
+   "hours": 2,
+   "blockingRuleId": "dry",
+   "failCount": 2
+  },
+  {
+   "startIdx": 105,
+   "endIdx": 168,
+   "hours": 64,
+   "blockingRuleId": "apparent",
+   "failCount": 64
+  },
+  {
+   "startIdx": 174,
+   "endIdx": 177,
+   "hours": 4,
+   "blockingRuleId": "dry",
+   "failCount": 4
+  }
+ ]
+}

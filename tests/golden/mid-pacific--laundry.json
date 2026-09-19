@@ -1,0 +1,54 @@
+{
+ "fixture": "forecast-mid-pacific.json",
+ "preset": "laundry",
+ "nowT": 1789791297,
+ "minHours": 4,
+ "hours": 192,
+ "pattern": "22222211111122222231112222222211122222221233333333233322221111222233332222222211111122222222223333333322211111111122222222222211111111111122222222222211111111111P111233333332111122222222333333",
+ "windows": [],
+ "best": null,
+ "nearMisses": [
+  {
+   "startIdx": 58,
+   "endIdx": 61,
+   "hours": 4,
+   "blockingRuleId": "rh",
+   "failCount": 4
+  },
+  {
+   "startIdx": 78,
+   "endIdx": 83,
+   "hours": 6,
+   "blockingRuleId": "rh",
+   "failCount": 6
+  },
+  {
+   "startIdx": 105,
+   "endIdx": 113,
+   "hours": 9,
+   "blockingRuleId": "rh",
+   "failCount": 9
+  },
+  {
+   "startIdx": 126,
+   "endIdx": 137,
+   "hours": 12,
+   "blockingRuleId": "rh",
+   "failCount": 12
+  },
+  {
+   "startIdx": 150,
+   "endIdx": 161,
+   "hours": 12,
+   "blockingRuleId": "rh",
+   "failCount": 11
+  },
+  {
+   "startIdx": 174,
+   "endIdx": 177,
+   "hours": 4,
+   "blockingRuleId": "rh",
+   "failCount": 4
+  }
+ ]
+}

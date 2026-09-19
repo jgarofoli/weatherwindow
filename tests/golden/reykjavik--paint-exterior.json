@@ -1,0 +1,40 @@
+{
+ "fixture": "forecast-reykjavik.json",
+ "preset": "paint-exterior",
+ "nowT": 1789791297,
+ "minHours": 6,
+ "hours": 192,
+ "pattern": "444423443322222222222222222222221111PPPPPPPP1223332445552221PPPPPPPP2223444444554554442444445665555566665443555555556544433333343322222222223334444444554455444444323332333333331111111122223344",
+ "windows": [
+  {
+   "startIdx": 36,
+   "endIdx": 43,
+   "hours": 8,
+   "startT": 1789819200,
+   "endT": 1789844400
+  },
+  {
+   "startIdx": 60,
+   "endIdx": 67,
+   "hours": 8,
+   "startT": 1789905600,
+   "endT": 1789930800
+  }
+ ],
+ "best": {
+  "startIdx": 36,
+  "endIdx": 43,
+  "hours": 8,
+  "startT": 1789819200,
+  "endT": 1789844400
+ },
+ "nearMisses": [
+  {
+   "startIdx": 176,
+   "endIdx": 183,
+   "hours": 8,
+   "blockingRuleId": "temp",
+   "failCount": 8
+  }
+ ]
+}

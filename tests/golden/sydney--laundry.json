@@ -1,0 +1,68 @@
+{
+ "fixture": "forecast-sydney.json",
+ "preset": "laundry",
+ "nowT": 1789791297,
+ "minHours": 4,
+ "hours": 192,
+ "pattern": "333333222PPPPPPPPP111111111111PPPPPPPPPPPP111111111111PPPPPPPPPPPP111111111111PPPPPPPPP121233321111111P111222122223333322222221111111111112222222222221111PPPPPPPP22222222222211PPPPPPPPPP223333",
+ "windows": [
+  {
+   "startIdx": 38,
+   "endIdx": 41,
+   "hours": 4,
+   "startT": 1789790400,
+   "endT": 1789801200
+  },
+  {
+   "startIdx": 54,
+   "endIdx": 65,
+   "hours": 12,
+   "startT": 1789848000,
+   "endT": 1789887600
+  },
+  {
+   "startIdx": 78,
+   "endIdx": 86,
+   "hours": 9,
+   "startT": 1789934400,
+   "endT": 1789963200
+  },
+  {
+   "startIdx": 154,
+   "endIdx": 161,
+   "hours": 8,
+   "startT": 1790208000,
+   "endT": 1790233200
+  },
+  {
+   "startIdx": 176,
+   "endIdx": 185,
+   "hours": 10,
+   "startT": 1790287200,
+   "endT": 1790319600
+  }
+ ],
+ "best": {
+  "startIdx": 54,
+  "endIdx": 65,
+  "hours": 12,
+  "startT": 1789848000,
+  "endT": 1789887600
+ },
+ "nearMisses": [
+  {
+   "startIdx": 95,
+   "endIdx": 102,
+   "hours": 8,
+   "blockingRuleId": "day",
+   "failCount": 7
+  },
+  {
+   "startIdx": 126,
+   "endIdx": 137,
+   "hours": 12,
+   "blockingRuleId": "rh",
+   "failCount": 12
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+{
+ "fixture": "forecast-mid-pacific.json",
+ "preset": "paint-exterior",
+ "nowT": 1789791297,
+ "minHours": 6,
+ "hours": 192,
+ "pattern": "333322112222222222333332222333222211222222332423322222121111111111224422331111PP11111111112222222222221311111PPPPP112111111111P11111111111222222222111111111111111333333322222121111111111222222",
+ "windows": [],
+ "best": null,
+ "nearMisses": [
+  {
+   "startIdx": 56,
+   "endIdx": 65,
+   "hours": 10,
+   "blockingRuleId": "dry",
+   "failCount": 10
+  },
+  {
+   "startIdx": 74,
+   "endIdx": 79,
+   "hours": 6,
+   "blockingRuleId": "day",
+   "failCount": 4
+  },
+  {
+   "startIdx": 80,
+   "endIdx": 89,
+   "hours": 10,
+   "blockingRuleId": "dry",
+   "failCount": 10
+  },
+  {
+   "startIdx": 104,
+   "endIdx": 113,
+   "hours": 10,
+   "blockingRuleId": "dry",
+   "failCount": 5
+  },
+  {
+   "startIdx": 117,
+   "endIdx": 126,
+   "hours": 10,
+   "blockingRuleId": "day",
+   "failCount": 9
+  },
+  {
+   "startIdx": 127,
+   "endIdx": 137,
+   "hours": 11,
+   "blockingRuleId": "temp",
+   "failCount": 11
+  },
+  {
+   "startIdx": 150,
+   "endIdx": 161,
+   "hours": 12,
+   "blockingRuleId": "temp",
+   "failCount": 12
+  },
+  {
+   "startIdx": 176,
+   "endIdx": 185,
+   "hours": 10,
+   "blockingRuleId": "dry",
+   "failCount": 10
+  }
+ ]
+}

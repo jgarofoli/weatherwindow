@@ -45,7 +45,7 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
 - [x] **M6 — Live data.** `geo.js`, `api.js` wired to UI, geolocation,
       error states. Exit: injected-fetch `ApiError` tests pass; manual QA
       items 7–10 pass locally.
-- [ ] **M7 — Ship.** README, push, enable Pages. Post-deploy smoke test
+- [x] **M7 — Ship.** README, push, enable Pages. Post-deploy smoke test
       (items 11–12) on the real `github.io` origin.
 
 ## Bonus ideas (deferred until v1 done)
@@ -246,3 +246,48 @@ first result, real forecast rendered (168 cells), no CORS or CSP errors.
 - Not done / for M7: 429 headers are still unobserved (status code alone is
   used); the JSON export/import backup remains deferred; the CSP `connect-src
   'self'` added in M5 is still there for the dev fixtures.
+
+## M7 notes (ship, 2026-09-19)
+
+- **Pages was already enabled** (source `main` `/docs`, public, HTTPS enforced)
+  before M7 started, so nothing to switch on; it rebuilt from `main` after each
+  merge. Live at https://jgarofoli.github.io/weatherwindow/.
+- **Post-deploy smoke test** (`npm run smoke:deployed`, spec §13 items 11-12)
+  passed against the real origin at `main` = `f04539d`: geocoding and forecast
+  calls succeed with real CORS, no CSP/console errors, only same-origin and
+  Open-Meteo hosts, attribution and disclaimer visible, zero cookies (both
+  `document.cookie` and the browser cookie jar), and a shared live link
+  reopens in a fresh browser.
+- **Added `golden.test.js`** (spec §12 listed it, earlier milestones missed
+  it): 5 fixtures x 3 presets = 15 files in `tests/golden/`, `nowT` pinned to
+  the capture time. Reviewed by eye: pass blocks line up with daylight, New
+  York paint's best window (hours 31..42) matches what the UI shows, and the
+  open-ocean point has no paint windows. Regenerate only with
+  `npm run golden:update`.
+- **Shared browser driver:** `scripts/cdp.mjs` is now used by both
+  `qa-browser.mjs` and `smoke-deployed.mjs`. `qa:browser` serves the site under
+  `/weatherwindow/` like a Pages project site; a mutation check (absolute
+  `/app.js`) confirmed it fails when a path isn't relative.
+- **README** documents commands, deploy steps, architecture, privacy and the
+  §14 findings.
+
+### Definition of done (spec §16)
+
+- [x] `npm test` green (184), every §12 test file exists and passes.
+- [x] §13 items 1-10 pass locally (automated in `qa:browser`, in headless
+      Chromium at 360 px); items 11-12 pass post-deploy (`smoke:deployed`).
+      **Not done: a pass on a real phone.** Cells are ~9 px wide at 360 px, so
+      this is the one thing worth eyeballing by hand.
+- [x] Zero runtime dependencies (no dependencies of any kind); zero cookies;
+      only Open-Meteo network calls (verified in code and on the live site).
+- [x] Attribution link and disclaimer visible.
+- [x] README documents commands, deploy steps and the §14 findings.
+
+### Still open / v1.1 candidates
+
+- JSON export/import of saved rules (spec §9), deferred.
+- 429 response headers never observed.
+- CSP `connect-src 'self'` only exists for the dev fixtures; could be removed
+  if `docs/dev/` is dropped.
+- Bonus ideas (stargazing, waves) are written up under "Bonus ideas" above and
+  are confirmed feasible with Open-Meteo.

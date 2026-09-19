@@ -1,0 +1,68 @@
+{
+ "fixture": "forecast-reykjavik.json",
+ "preset": "bike-commute",
+ "nowT": 1789791297,
+ "minHours": 1,
+ "hours": 192,
+ "pattern": "11PPPPPPPPPP11111111111111PPPPP1111PPPPPPPP11111P11111121PPPPPPPPPPPPPP22222322222222222222222222222222222222222333332222222211111222222222222233222223333333333222222222222222221PPPPPPPPPPPP11",
+ "windows": [
+  {
+   "startIdx": 28,
+   "endIdx": 30,
+   "hours": 3,
+   "startT": 1789790400,
+   "endT": 1789797600
+  },
+  {
+   "startIdx": 35,
+   "endIdx": 42,
+   "hours": 8,
+   "startT": 1789815600,
+   "endT": 1789840800
+  },
+  {
+   "startIdx": 48,
+   "endIdx": 48,
+   "hours": 1,
+   "startT": 1789862400,
+   "endT": 1789862400
+  },
+  {
+   "startIdx": 57,
+   "endIdx": 70,
+   "hours": 14,
+   "startT": 1789894800,
+   "endT": 1789941600
+  },
+  {
+   "startIdx": 178,
+   "endIdx": 189,
+   "hours": 12,
+   "startT": 1790330400,
+   "endT": 1790370000
+  }
+ ],
+ "best": {
+  "startIdx": 57,
+  "endIdx": 70,
+  "hours": 14,
+  "startT": 1789894800,
+  "endT": 1789941600
+ },
+ "nearMisses": [
+  {
+   "startIdx": 125,
+   "endIdx": 129,
+   "hours": 5,
+   "blockingRuleId": "dry",
+   "failCount": 5
+  },
+  {
+   "startIdx": 190,
+   "endIdx": 191,
+   "hours": 2,
+   "blockingRuleId": "dry",
+   "failCount": 2
+  }
+ ]
+}

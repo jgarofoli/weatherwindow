@@ -1,0 +1,68 @@
+{
+ "fixture": "forecast-denver.json",
+ "preset": "paint-exterior",
+ "nowT": 1789791297,
+ "minHours": 6,
+ "hours": 192,
+ "pattern": "2222111PPPPPPPPPPPPP111111111221PPPP1111PPPP111111123332PPPPPPPPPPPP1111233122431PP11111111222222211111PPPPPP111111222222211111PPPPPPPPPPPP111111111111PPPPPPPPPPPP111111111111PPPP1111111122222",
+ "windows": [
+  {
+   "startIdx": 56,
+   "endIdx": 67,
+   "hours": 12,
+   "startT": 1789826400,
+   "endT": 1789866000
+  },
+  {
+   "startIdx": 103,
+   "endIdx": 108,
+   "hours": 6,
+   "startT": 1789995600,
+   "endT": 1790013600
+  },
+  {
+   "startIdx": 127,
+   "endIdx": 138,
+   "hours": 12,
+   "startT": 1790082000,
+   "endT": 1790121600
+  },
+  {
+   "startIdx": 151,
+   "endIdx": 162,
+   "hours": 12,
+   "startT": 1790168400,
+   "endT": 1790208000
+  }
+ ],
+ "best": {
+  "startIdx": 56,
+  "endIdx": 67,
+  "hours": 12,
+  "startT": 1789826400,
+  "endT": 1789866000
+ },
+ "nearMisses": [
+  {
+   "startIdx": 83,
+   "endIdx": 90,
+   "hours": 8,
+   "blockingRuleId": "dry",
+   "failCount": 8
+  },
+  {
+   "startIdx": 109,
+   "endIdx": 114,
+   "hours": 6,
+   "blockingRuleId": "dry",
+   "failCount": 6
+  },
+  {
+   "startIdx": 179,
+   "endIdx": 186,
+   "hours": 8,
+   "blockingRuleId": "dry",
+   "failCount": 8
+  }
+ ]
+}
