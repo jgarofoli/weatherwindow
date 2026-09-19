@@ -68,3 +68,16 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
   network calls yet, to validate rule-engine semantics before touching
   parsing, UI, or live data — matches spec §11's explicit ordering and its
   own "core de-risk" label on M1.
+- 2026-09-19: M0 and M1 complete (30/30 tests green); PR #1 opened and
+  marked ready for review.
+- 2026-09-19: M2 ("real capture") is blocked in this remote sandbox — its
+  egress proxy returns 403 for both `api.open-meteo.com` and
+  `geocoding-api.open-meteo.com` (confirmed via the proxy status endpoint,
+  `connect_rejected` / "policy denial", not a transient failure). Paused
+  work here at the user's direction; M2 continues on a machine with
+  outbound network access. Resume with `npm run capture` (writes to
+  `tests/fixtures/`), per spec §11 M2 and the §14 checklist of assumptions
+  to confirm from the real response (past_days lookback, timezone/
+  utc_offset_seconds population, hourly_units strings, nullability of
+  precipitation_probability, geocoding no-results shape, error payload
+  shape, gaps in the hourly time array, 429 behavior).
