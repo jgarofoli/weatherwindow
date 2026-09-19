@@ -1,0 +1,68 @@
+{
+ "capturedAt": "2026-09-19T04:14:57.413Z",
+ "responses": {
+  "forecast-new-york": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=40.71&longitude=-74.01&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "forecast-denver": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=39.74&longitude=-104.99&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "forecast-sydney": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=-33.87&longitude=151.21&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "forecast-reykjavik": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=64.15&longitude=-21.94&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "forecast-mid-pacific": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=0&longitude=-160&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "geocode-springfield": {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?name=Springfield&count=8&language=en&format=json",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "geocode-empty": {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?name=zzzzqqqxx&count=8&language=en&format=json",
+   "status": 200,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "error-bad-lat": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=999&longitude=0&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,cloud_cover,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 400,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  },
+  "error-bad-variable": {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=40.71&longitude=-74.01&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,uv_index,not_a_variable,is_day&timeformat=unixtime&timezone=auto&forecast_days=7&past_days=1&wind_speed_unit=kmh&temperature_unit=celsius&precipitation_unit=mm",
+   "status": 400,
+   "headers": {
+    "content-type": "application/json; charset=utf-8"
+   }
+  }
+ }
+}
