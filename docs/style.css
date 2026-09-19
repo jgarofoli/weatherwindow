@@ -288,6 +288,59 @@ a {
   font-weight: 600;
 }
 
+/* ---------- Location search ---------- */
+input[type="search"] {
+  width: 100%;
+}
+.results {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.6rem;
+}
+.results:empty {
+  display: none;
+}
+.results li + li {
+  border-top: 1px solid var(--line);
+}
+.results button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  border-radius: 0;
+  font-weight: 500;
+  padding: 0.55rem 0.4rem;
+}
+.results button:hover {
+  background: var(--bg);
+}
+.advanced {
+  margin-top: 0.6rem;
+}
+.advanced summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  margin-bottom: 0.4rem;
+}
+.error-box {
+  border: 1px solid var(--err);
+  border-left-width: 6px;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.error-box[hidden] {
+  display: none;
+}
+
 /* ---------- Rules ---------- */
 .field {
   display: flex;
@@ -333,6 +386,7 @@ legend {
 
 select,
 input[type="text"],
+input[type="search"],
 input.num,
 button {
   font: inherit;

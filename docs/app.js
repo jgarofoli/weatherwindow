@@ -1,7 +1,9 @@
 // DOM glue only: state, events, rendering. All logic lives in ./lib/ (pure, tested).
 // Every string that reaches the DOM goes through textContent / setAttribute, never innerHTML.
 import { evaluateHours, findWindows, findNearMisses } from "./lib/engine.js";
-import { parseForecast } from "./lib/forecast.js";
+import { buildForecastUrl, parseForecast } from "./lib/forecast.js";
+import { ApiError, fetchJson } from "./lib/api.js";
+import { buildGeocodeUrl, normalizeGeocode, roundCoord } from "./lib/geo.js";
 import { buildViewModel } from "./lib/viewmodel.js";
 import { PRESETS, DEFAULT_PRESET_ID, clonePreset } from "./lib/presets.js";
 import { validateRuleSet, METRICS, ruleName, MAX_RULES, HORIZONS } from "./lib/rules.js";
@@ -18,7 +20,13 @@ const state = {
   loc: null,
   units: "metric",
   ruleSet: clonePreset(DEFAULT_PRESET_ID),
-  forecast: null, // parseForecast output
+  forecast: null, // parseForecast output for the location in `loc`
+  mode: "live", // "fixture" only with ?fixture=<name> (dev)
+  pending: null, // { name, lat, lon } being fetched; becomes `loc` only once its forecast loads
+  loadedKey: null, // "lat,lon,horizon" of `forecast`
+  fetchToken: 0, // ignores responses that a newer request has superseded
+  fixtureNow: null,
+  searchResults: [],
   nowT: 0,
   vm: null,
   selected: null, // hour index
@@ -71,7 +79,10 @@ function writeSaved(list) {
 }
 
 // ---------- compute + URL ----------
+const currentNowT = () => state.fixtureNow ?? Math.floor(Date.now() / 1000);
+
 function compute() {
+  state.nowT = currentNowT();
   const { hours, tz } = state.forecast;
   const rs = state.ruleSet;
   const visible = hours.slice(0, Math.min(hours.length, 24 + 24 * rs.horizonDays)); // 1 past day + horizon
@@ -86,7 +97,7 @@ function compute() {
 
 function syncUrl() {
   try {
-    history.replaceState(null, "", location.pathname + location.search + encodeState(state));
+    history.replaceState(null, "", location.pathname + location.search + encodeState({ ...state, loc: state.loc ?? state.pending }));
   } catch {
     /* sandboxed or file context: sharing just won't reflect edits */
   }
@@ -221,10 +232,21 @@ function renderLists() {
 
 function renderResult() {
   compute();
+  $("best").hidden = false;
   $("best").textContent = state.vm.bestSentence;
   renderGrid();
   renderDetail();
   renderLists();
+}
+
+function renderAll() {
+  $("loc-name").textContent = state.loc?.name ?? state.pending?.name ?? "No location chosen.";
+  const has = state.forecast !== null;
+  $("result-body").hidden = !has;
+  if (has) return renderResult();
+  const best = $("best");
+  best.textContent = state.loc || state.pending ? "" : "Choose a location to find your window.";
+  best.hidden = best.textContent === "";
 }
 
 function selectCell(i, { focus = false } = {}) {
@@ -401,10 +423,11 @@ function commit(candidate, { rebuild = false } = {}) {
   }
   showErrors([]);
   state.ruleSet = r.value;
-  renderResult();
+  renderAll();
   renderControls();
   if (rebuild) renderRules();
   syncUrl();
+  ensureForecast(); // only fetches if the horizon changed; rule edits never refetch
   return true;
 }
 
@@ -520,6 +543,175 @@ async function copyLink() {
   }
 }
 
+// ---------- live data ----------
+const RETRYABLE = new Set(["rate-limit", "network", "timeout", "server"]);
+
+function errorMessage(err, what) {
+  if (err instanceof ApiError) {
+    switch (err.kind) {
+      case "rate-limit": return "The weather service is busy. Try again in a few minutes.";
+      case "network": return "Couldn't reach the weather service. Check your connection and try again.";
+      case "timeout": return "The weather service took too long to answer. Try again.";
+      case "server": return "The weather service had a problem. Try again in a moment.";
+    }
+  }
+  return `Something went wrong reading the ${what}. Details are in the browser console.`;
+}
+
+function showFetchError(err) {
+  const box = $("fetch-error");
+  box.hidden = err === null;
+  if (err === null) return;
+  console.error("Forecast request failed:", err, err?.reason ?? "");
+  $("fetch-error-text").textContent = errorMessage(err, "forecast");
+  $("retry-btn").hidden = !(err instanceof ApiError && RETRYABLE.has(err.kind));
+}
+
+// Fetches when the wanted (lat, lon, horizon) differs from what's loaded. On failure the last good
+// forecast, and the location it belongs to, stay on screen untouched.
+async function ensureForecast({ force = false } = {}) {
+  if (state.mode !== "live") return;
+  const target = state.pending ?? state.loc;
+  if (!target) return;
+  const horizon = state.ruleSet.horizonDays;
+  const key = `${target.lat},${target.lon},${horizon}`;
+  if (!force && key === state.loadedKey) {
+    state.pending = null;
+    $("fetch-status").textContent = "";
+    return showFetchError(null);
+  }
+  const token = ++state.fetchToken;
+  $("fetch-status").textContent = `Loading forecast for ${target.name}…`;
+  showFetchError(null);
+  let forecast;
+  try {
+    forecast = parseForecast(await fetchJson(buildForecastUrl({ lat: target.lat, lon: target.lon, horizonDays: horizon })));
+  } catch (err) {
+    if (token !== state.fetchToken) return;
+    $("fetch-status").textContent = "";
+    return showFetchError(err);
+  }
+  if (token !== state.fetchToken) return;
+  if (!state.loc || state.loc.lat !== target.lat || state.loc.lon !== target.lon) {
+    state.selected = null;
+    state.dayOpen = null;
+  }
+  state.forecast = forecast;
+  state.loadedKey = key;
+  state.loc = target;
+  state.pending = null;
+  $("fetch-status").textContent = "";
+  showFetchError(null);
+  renderAll();
+  syncUrl();
+}
+
+// Coordinates are rounded to ~1 km before use, so a shared link reproduces exactly this request.
+function setLocation({ name, lat, lon }) {
+  state.pending = { name: name.slice(0, 80), lat: roundCoord(lat, 2), lon: roundCoord(lon, 2) };
+  renderAll();
+  ensureForecast();
+}
+
+// ---------- place search ----------
+let searchTimer = null;
+let searchToken = 0;
+
+function renderResults(list) {
+  state.searchResults = list;
+  const ul = $("results");
+  clear(ul);
+  list.forEach((r, i) => {
+    const b = el("button", { text: r.label, attrs: { type: "button" } });
+    b.dataset.idx = String(i);
+    ul.append(el("li", {}, b));
+  });
+}
+
+async function runSearch(url) {
+  const token = ++searchToken;
+  $("search-status").textContent = "Searching…";
+  let results;
+  try {
+    results = normalizeGeocode(await fetchJson(url));
+  } catch (err) {
+    if (token !== searchToken) return;
+    console.error("Place search failed:", err, err?.reason ?? "");
+    renderResults([]);
+    $("search-status").textContent = errorMessage(err, "search results");
+    return;
+  }
+  if (token !== searchToken) return;
+  renderResults(results);
+  $("search-status").textContent = results.length ? `${results.length} ${results.length === 1 ? "place" : "places"} found. Pick one.` : "No places found.";
+}
+
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  const q = $("q").value;
+  const url = buildGeocodeUrl(q);
+  if (!url) {
+    searchToken++; // drop any in-flight search
+    renderResults([]);
+    $("search-status").textContent = q.trim() ? "Type at least 3 characters." : "";
+    return;
+  }
+  searchTimer = setTimeout(() => runSearch(url), 300);
+}
+
+function clearSearch() {
+  clearTimeout(searchTimer);
+  searchToken++;
+  renderResults([]);
+  $("q").value = "";
+  $("search-status").textContent = "";
+}
+
+function onResultClick(e) {
+  const b = e.target.closest("button");
+  const r = b ? state.searchResults[Number(b.dataset.idx)] : null;
+  if (!r) return;
+  clearSearch();
+  setLocation({ name: r.label, lat: r.lat, lon: r.lon });
+}
+
+// ---------- geolocation (only ever on click) and manual coordinates ----------
+function useMyLocation() {
+  const status = $("search-status");
+  if (!("geolocation" in navigator)) {
+    status.textContent = "This browser can't share your location. Search for a place instead.";
+    return;
+  }
+  status.textContent = "Finding your location…";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = roundCoord(pos.coords.latitude, 2);
+      const lon = roundCoord(pos.coords.longitude, 2);
+      clearSearch();
+      setLocation({ name: `My location (${lat}, ${lon})`, lat, lon });
+    },
+    (err) => {
+      status.textContent =
+        err.code === 1
+          ? "Location access was denied. Search for a place instead."
+          : "Couldn't get your location. Search for a place instead.";
+    },
+    { timeout: 10000, maximumAge: 300000 },
+  );
+}
+
+function useCoordinates() {
+  const lat = $("lat").value.trim() === "" ? NaN : Number($("lat").value);
+  const lon = $("lon").value.trim() === "" ? NaN : Number($("lon").value);
+  if (!(Math.abs(lat) <= 90) || !(Math.abs(lon) <= 180)) {
+    $("search-status").textContent = "Enter a latitude from -90 to 90 and a longitude from -180 to 180.";
+    return;
+  }
+  clearSearch();
+  const [rl, ro] = [roundCoord(lat, 2), roundCoord(lon, 2)];
+  setLocation({ name: `${rl}, ${ro}`, lat: rl, lon: ro });
+}
+
 // ---------- boot ----------
 async function loadFixture(name, manifest) {
   const res = await fetch(`./dev/${encodeURIComponent(name)}.json`);
@@ -527,6 +719,38 @@ async function loadFixture(name, manifest) {
   const json = await res.json();
   const label = manifest.fixtures.find((f) => f.name === name)?.label ?? name;
   return { forecast: parseForecast(json), loc: { name: `${label} (sample data)`, lat: json.latitude, lon: json.longitude } };
+}
+
+// Dev only: ?fixture=<name> runs the whole UI on a captured response with no live calls.
+async function bootFixture(params, decoded) {
+  state.mode = "fixture";
+  $("live-controls").hidden = true;
+  try {
+    const manifest = await (await fetch("./dev/manifest.json")).json();
+    const sel = $("fixture-select");
+    for (const f of manifest.fixtures) sel.append(el("option", { text: f.label, attrs: { value: f.name } }));
+    let name = params.get("fixture");
+    if (!manifest.fixtures.some((f) => f.name === name)) {
+      showBanner(`Unknown sample "${String(name).slice(0, 40)}". Showing New York.`);
+      name = "new-york";
+    }
+    sel.value = name;
+    $("dev-fixture").hidden = false;
+    const now = Number(params.get("now"));
+    state.fixtureNow = Number.isInteger(now) && now > 0 ? now : Math.floor(Date.parse(manifest.capturedAt) / 1000);
+    const { forecast, loc } = await loadFixture(name, manifest);
+    state.forecast = forecast;
+    state.loc = loc;
+    if (!decoded.warnings.length) showBanner("Showing saved sample data (dev mode).");
+  } catch (err) {
+    console.error(err);
+    showBanner("Couldn't load the sample data.");
+    return;
+  }
+  renderControls();
+  renderRules();
+  renderAll();
+  syncUrl();
 }
 
 async function boot() {
@@ -537,40 +761,16 @@ async function boot() {
     console.warn("Shared link problems:", decoded.warnings);
     showBanner("Couldn't read the shared link. Showing the default rules.");
   }
-
   for (const t of TEMPLATES) $("add-rule").append(el("option", { text: t.label, attrs: { value: t.key } }));
 
-  // Live data (search, geolocation, Open-Meteo fetch) arrives in M6; until then the page runs on captured samples.
   const params = new URLSearchParams(location.search);
-  try {
-    const manifest = await (await fetch("./dev/manifest.json")).json();
-    const sel = $("fixture-select");
-    for (const f of manifest.fixtures) sel.append(el("option", { text: f.label, attrs: { value: f.name } }));
-    let name = params.get("fixture") ?? "new-york";
-    if (!manifest.fixtures.some((f) => f.name === name)) {
-      showBanner(`Unknown sample "${name.slice(0, 40)}". Showing New York.`);
-      name = "new-york";
-    }
-    sel.value = name;
-    $("dev-fixture").hidden = false;
-    const now = Number(params.get("now"));
-    state.nowT = Number.isInteger(now) && now > 0 ? now : Math.floor(Date.parse(manifest.capturedAt) / 1000);
-    const { forecast, loc } = await loadFixture(name, manifest);
-    state.forecast = forecast;
-    state.loc = loc;
-    state.fixture = name;
-    if (!decoded.warnings.length) showBanner("Showing saved sample data. Live search arrives in the next milestone.");
-  } catch (err) {
-    console.error(err);
-    showBanner("Couldn't load the forecast data.");
-    return;
-  }
+  if (params.has("fixture")) return bootFixture(params, decoded);
 
-  $("loc-name").textContent = state.loc.name;
+  state.pending = decoded.state.loc; // from a shared link; becomes `loc` once its forecast loads
   renderControls();
   renderRules();
-  renderResult();
-  syncUrl();
+  renderAll();
+  ensureForecast();
 }
 
 $("grid").addEventListener("click", (e) => {
@@ -601,11 +801,16 @@ for (const r of document.querySelectorAll('input[name="units"]')) {
   r.addEventListener("change", () => {
     state.units = r.value;
     renderRules();
-    renderResult();
+    renderAll();
     renderControls();
     syncUrl();
   });
 }
+$("q").addEventListener("input", onSearchInput);
+$("results").addEventListener("click", onResultClick);
+$("geo-btn").addEventListener("click", useMyLocation);
+$("coords-btn").addEventListener("click", useCoordinates);
+$("retry-btn").addEventListener("click", () => ensureForecast({ force: true }));
 $("save-btn").addEventListener("click", saveRules);
 $("delete-saved").addEventListener("click", deleteSaved);
 $("copy-link").addEventListener("click", copyLink);
