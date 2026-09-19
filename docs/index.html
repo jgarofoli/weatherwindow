@@ -25,6 +25,31 @@
         <h2 id="loc-h">Location</h2>
         <p id="loc-name" class="loc-name"></p>
         <p class="attr"><a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com</a></p>
+
+        <div id="live-controls">
+          <div class="field">
+            <label for="q">Search for a place</label>
+            <input id="q" type="search" autocomplete="off" spellcheck="false" maxlength="100" placeholder="City or town" />
+          </div>
+          <p id="search-status" class="notes" role="status"></p>
+          <ul id="results" class="results"></ul>
+
+          <div class="actions">
+            <button type="button" id="geo-btn">Use my location</button>
+          </div>
+          <details class="advanced">
+            <summary>Enter coordinates</summary>
+            <div class="field inline">
+              <label for="lat">Latitude</label>
+              <input id="lat" class="num" type="number" step="any" min="-90" max="90" inputmode="decimal" />
+              <label for="lon">Longitude</label>
+              <input id="lon" class="num" type="number" step="any" min="-180" max="180" inputmode="decimal" />
+              <button type="button" id="coords-btn">Use these</button>
+            </div>
+          </details>
+
+        </div>
+
         <p id="dev-fixture" class="dev" hidden>
           <label>Sample data <select id="fixture-select"></select></label>
         </p>
@@ -33,19 +58,26 @@
       <section class="card" aria-labelledby="result-h">
         <h2 id="result-h">Result</h2>
         <p id="best" class="best" role="status"></p>
-        <ul class="legend" aria-label="Legend">
-          <li><span class="key state-pass" aria-hidden="true">✓</span> All rules pass</li>
-          <li><span class="key state-near" aria-hidden="true">~</span> One rule fails</li>
-          <li><span class="key state-fail" aria-hidden="true">✕</span> Fails</li>
-          <li><span class="key state-past" aria-hidden="true">·</span> Past</li>
-          <li><span class="key key-window" aria-hidden="true"></span> In a window</li>
-        </ul>
-        <div id="grid" class="grid" role="group" aria-label="Hourly results by day. Arrow keys move between hours."></div>
-        <div id="detail" class="detail" aria-live="polite" hidden></div>
-        <h3>Windows</h3>
-        <ol id="windows" class="plain"></ol>
-        <h3>Closest misses</h3>
-        <ol id="misses" class="plain"></ol>
+        <p id="fetch-status" class="notes" role="status"></p>
+        <div id="fetch-error" class="error-box" role="alert" hidden>
+          <span id="fetch-error-text"></span>
+          <button type="button" id="retry-btn" hidden>Try again</button>
+        </div>
+        <div id="result-body" hidden>
+          <ul class="legend" aria-label="Legend">
+            <li><span class="key state-pass" aria-hidden="true">✓</span> All rules pass</li>
+            <li><span class="key state-near" aria-hidden="true">~</span> One rule fails</li>
+            <li><span class="key state-fail" aria-hidden="true">✕</span> Fails</li>
+            <li><span class="key state-past" aria-hidden="true">·</span> Past</li>
+            <li><span class="key key-window" aria-hidden="true"></span> In a window</li>
+          </ul>
+          <div id="grid" class="grid" role="group" aria-label="Hourly results by day. Arrow keys move between hours."></div>
+          <div id="detail" class="detail" aria-live="polite" hidden></div>
+          <h3>Windows</h3>
+          <ol id="windows" class="plain"></ol>
+          <h3>Closest misses</h3>
+          <ol id="misses" class="plain"></ol>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="rules-h">

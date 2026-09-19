@@ -42,7 +42,7 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
 - [x] **M5 — UI on fixtures, no network.** `index.html`, `style.css`,
       `app.js`, `?fixture=name` dev flag. Exit: manual QA §13 items 1–6
       pass at phone width.
-- [ ] **M6 — Live data.** `geo.js`, `api.js` wired to UI, geolocation,
+- [x] **M6 — Live data.** `geo.js`, `api.js` wired to UI, geolocation,
       error states. Exit: injected-fetch `ApiError` tests pass; manual QA
       items 7–10 pass locally.
 - [ ] **M7 — Ship.** README, push, enable Pages. Post-deploy smoke test
@@ -202,3 +202,47 @@ mode, 900 px, and a fall-back DST day (25 columns, second 1 AM labeled
   polish or v1.1.
 - Not covered by automation: the page doesn't react to hash edits made in the
   same tab (only to a fresh load), which matches how links are shared.
+
+## M6 notes (live data, 2026-09-19)
+
+Exit criteria: injected-fetch tests cover every `ApiError` kind (`api.test.js`,
+`geo.test.js`); spec §13 items 7-10 pass in `npm run qa:browser`, which now
+answers Open-Meteo from `tests/fixtures/` (plus a fake 429, dropped connection
+and 400) via CDP request interception and pins `Date.now` to the capture time,
+so it is deterministic and never calls the real API. Also run once by hand
+against the real APIs from a `localhost` origin: geocoding "Denver", pick the
+first result, real forecast rendered (168 cells), no CORS or CSP errors.
+
+- **`api.js`:** every non-2xx is classified: 429 -> `rate-limit`, 5xx ->
+  `server`, other 4xx with `{error:true, reason}` -> `api-error` (this is the
+  real HTTP 400 shape from the M2 captures), other 4xx / non-JSON 2xx ->
+  `bad-response`. The timeout covers reading the body, not just the headers.
+  `reason` is always a string capped at 500 chars.
+- **`geo.js`:** `normalizeGeocode` maps the API's `latitude/longitude/timezone`
+  to `lat/lon/tz`, skips results with unusable coordinates, and collapses
+  adjacent duplicate label parts. Real data note: results aren't always named
+  like the query (searching "Springfield" returned Palmyra, Missouri and
+  Jackson, Minnesota, presumably via other matches), so the list shows the full
+  label rather than assuming.
+- **Fetch policy (`ensureForecast` in `app.js`):** a fetch happens only when
+  (lat, lon, horizon) differs from what's loaded, so rule edits never refetch,
+  and a horizon change (or a preset with a different horizon) does. A request
+  token drops superseded responses. **A failed fetch keeps the last good
+  forecast *and* the location it belongs to**; the new place only replaces
+  them once its forecast loads, so a forecast is never shown under the wrong
+  name. "Try again" retries the pending target.
+- **Privacy/limits:** nothing is requested on load without a location;
+  geolocation only on button click; search only after 3+ characters and a
+  300 ms pause; coordinates are rounded to 2 dp *before* the request, so a
+  shared link reproduces exactly the request that was made.
+- **Error copy** follows §10. Beyond the spec, `rate-limit` also gets a retry
+  button (harmless; the spec only lists one for network/timeout/server), and
+  `timeout`/`server` have their own wording. Generic errors log details to the
+  console and show no retry.
+- **Fixture mode** (`?fixture=`) now hides the search controls and uses the
+  capture time as "now"; live mode uses `Date.now()` on every evaluation, so
+  "past" hours advance as the page stays open (the forecast itself is not
+  auto-refreshed; reloading or re-picking the place refetches).
+- Not done / for M7: 429 headers are still unobserved (status code alone is
+  used); the JSON export/import backup remains deferred; the CSP `connect-src
+  'self'` added in M5 is still there for the dev fixtures.
