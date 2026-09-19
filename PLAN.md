@@ -2,8 +2,8 @@
 
 Static, no-build, no-dependency site on GitHub Pages (`docs/`) that finds
 windows in an hourly forecast where all of a user's rules hold for a
-minimum consecutive-hour run. Full spec is in the task description that
-generated this plan; this file tracks milestone status and decisions made
+minimum consecutive-hour run. Full spec is in [`SPEC.md`](SPEC.md) (verbatim from the original
+request; section numbers referenced below, e.g. §11, §14, refer to it); this file tracks milestone status and decisions made
 along the way so work can resume without re-deriving context.
 
 ## Architecture recap
@@ -20,15 +20,15 @@ Data flow: location -> `buildForecastUrl` -> `fetchJson` -> `parseForecast`
 
 Rule: don't start milestone N+1 until milestone N's exit criteria pass.
 
-- [ ] **M0 — Harness.** `package.json`, one trivial passing test, `npm run
+- [x] **M0 — Harness.** `package.json`, one trivial passing test, `npm run
       serve` serves a blank `docs/index.html`, `docs/.nojekyll`.
       Exit: `npm test` green; page loads at `http://localhost:8000`.
-- [ ] **M1 — Engine on hard-coded data (core de-risk).** `engine.js`,
+- [x] **M1 — Engine on hard-coded data (core de-risk).** `engine.js`,
       `tests/support/makeHours.js`, `tests/engine.test.js`, canonical
       scenario S1. No network, no UI, no parser.
       Exit: all engine tests in spec §12 pass; every rule type's behavior
       can be explained from first principles, no hand-waving.
-- [ ] **M2 — Real response, parser, time/DST.** `npm run capture` against
+- [x] **M2 — Real response, parser, time/DST.** `npm run capture` against
       real Open-Meteo endpoints; `forecast.js`, `timefmt.js`, `units.js`.
       Exit: parser + DST tests pass on real fixtures; §14 assumptions
       confirmed or spec amended. Kill/pivot check on null
@@ -51,11 +51,14 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
 ## Bonus ideas (deferred until v1 done)
 
 - Stargazing: sunset/sunrise, moonset/moonrise, moon phase (dark-sky
-  windows). Open-Meteo's forecast API returns `sunrise`/`sunset` in the
-  daily block already; moon phase needs a separate calc (no free-tier
-  Open-Meteo field for it as of this writing — confirm at M2/M6, else use
-  a small pure astronomical formula, no extra network dependency).
-- Coastal wave forecasts: Open-Meteo has a **separate** Marine Weather
+  windows). **Confirmed 2026-09-19:** the forecast API's `daily` block
+  returns `sunrise`, `sunset`, `moonrise`, `moonset` (local ISO strings;
+  `moonset` can be `null` on days the moon doesn't set) and `moon_phase`
+  (fraction 0..1, 0 = new, 0.5 = full). No pure-formula fallback needed.
+  Same host, so no CSP change. Needs a `daily` parse path and a new rule
+  type (e.g. `dark` = sun below horizon, moon down or phase < X) plus
+  `cloud` range for clear skies; fits the existing engine model.
+- Coastal wave forecasts: **Yes, confirmed 2026-09-19.** Open-Meteo has a **separate** Marine Weather
   API (`marine-api.open-meteo.com`) with wave height/period/direction —
   it is a different host, so CSP `connect-src` and the free-tier terms
   would both need updating if pursued. Treat as its own preset family
@@ -68,3 +71,52 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
   network calls yet, to validate rule-engine semantics before touching
   parsing, UI, or live data — matches spec §11's explicit ordering and its
   own "core de-risk" label on M1.
+- 2026-09-19: M2 unblocked (the earlier 403 was the other sandbox's egress
+  proxy; this machine reaches Open-Meteo directly). Saved the full spec as
+  `SPEC.md`, since PLAN.md only summarizes it.
+- 2026-09-19: `timefmt.groupByLocalDay` returns
+  `[{ dateKey, year, month, day, weekday, cells: [{ i, t, hour, minute, ambiguous }] }]`
+  (`weekday` 0 = Sunday). The spec doesn't fix this shape; M4's viewmodel
+  builds on it. Only the *second* repeated local hour is `ambiguous`, per
+  spec §12.
+
+## M2 findings (spec §14 checklist, from `tests/fixtures/`, captured 2026-09-19)
+
+Fixtures: `npm run capture` writes 5 forecasts (New York, Denver, Sydney,
+Reykjavik, open ocean at 0,-160), 2 geocodes, 2 error payloads, and
+`_meta.json` (URLs, status, headers).
+
+- **`past_days=1` -> 24 extra past hours: confirmed, with a nuance.** Every
+  fixture has 192 hours = 8 x 24, and the first hour is *local midnight
+  yesterday*, not now-24h. So real lookback is 24-47 h depending on time of
+  day. Enough for `dry.before` <= 24 always. Tested.
+- **`timezone=auto`: confirmed.** `timezone` (IANA, `Etc/GMT+11` for open
+  ocean), `timezone_abbreviation` (`GMT-4` style, *not* `EDT`; use `Intl` for
+  abbreviations), `utc_offset_seconds`, and `hourly_units` all present.
+  Units: `°C`, `%`, `mm`, `km/h`; `uv_index` and `is_day` have empty-string
+  units.
+- **Null `precipitation_probability` / `dew_point_2m`: not seen.** Zero nulls
+  in any variable across all 5 locations, including open ocean. The
+  kill/pivot check passes: keep `maxProb` and `dewMargin`. This is a test
+  (`forecast.test.js`), so a re-capture that shows nulls will fail loudly. The
+  engine's `no-data` handling stays for regions/models we didn't sample.
+- **Geocoding with no match: confirmed.** Response is
+  `{"generationtime_ms": ...}` with no `results` key. Result fields are
+  `latitude`, `longitude`, `timezone`, `country_code`, `admin1`, `id` etc.,
+  so `normalizeGeocode` (M6) must map to `lat`/`lon`/`tz`.
+- **Error payload: confirmed, with a spec amendment.** A bad request returns
+  **HTTP 400** with `{"error": true, "reason": "..."}`. Spec §7 lists
+  `api-error` as "payload flags an error" but doesn't say a 400 arrives
+  first. **M6 `fetchJson` must parse the body of non-2xx responses (other
+  than 429/5xx) and raise `api-error` with `reason`**, not a generic
+  `bad-response`.
+- **`time` strictly hourly: confirmed** on all 5 (no gaps). Gap-filling is
+  still implemented and tested synthetically. `parseForecast` also rejects
+  non-increasing or non-whole-hour steps, and gaps over 16 days.
+- **429 behavior: not confirmed.** Can't be provoked politely on the free
+  tier. `_meta.json` records `retry-after`/`x-ratelimit*` headers if any
+  appear (none did). M6 handles 429 by status code alone; revisit if
+  headers turn up.
+- **CORS:** forecast, geocoding and marine hosts all return
+  `access-control-allow-origin: *` (checked with curl and an `Origin`
+  header). The real browser check is still spec §13 item 11 post-deploy.
