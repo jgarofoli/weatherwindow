@@ -61,5 +61,12 @@ export function groupByLocalDay(hours, tz) {
 export function hourLabel(t, tz, locale, { ambiguous = false } = {}) {
   const opts = { timeZone: tz, hour: "numeric" };
   if (ambiguous) opts.timeZoneName = "short";
-  return new Intl.DateTimeFormat(locale, opts).format(new Date(t * 1000));
+  // Newer ICU puts a narrow no-break space before AM/PM; normalize so sentences are stable across runtimes.
+  return new Intl.DateTimeFormat(locale, opts).format(new Date(t * 1000)).replace(/[\u202f\u00a0]/g, " ");
+}
+
+// Label for a local calendar date ({ year, month, day }, e.g. from localParts). Formats a UTC-noon
+// instant in UTC, so it never depends on the runtime's own timezone or on DST.
+export function dayLabel({ year, month, day }, locale, opts = { weekday: "short", month: "short", day: "numeric" }) {
+  return new Intl.DateTimeFormat(locale, { ...opts, timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, day, 12)));
 }

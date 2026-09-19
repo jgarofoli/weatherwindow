@@ -100,7 +100,7 @@ export function evaluateHours(hours, rules) {
   });
 }
 
-function isPastHour(evalHour, nowT) {
+export function isPastHour(evalHour, nowT) {
   return !isNil(nowT) && evalHour.t + 3600 <= nowT;
 }
 
