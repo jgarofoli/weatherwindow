@@ -40,6 +40,17 @@ test("window crossing midnight names the end weekday", () => {
   assert.equal(vm.bestSentence, "Best window: Sat 10 PM to Sun 4 AM (6 h)");
 });
 
+test("windows of a day or more include dates, so 'Sat ... to Sat' can't read as zero-length", () => {
+  const hours = makeHours(24 * 7);
+  const evals = evaluateHours(hours, []);
+  const w = { startIdx: 0, endIdx: 167, hours: 168, startT: hours[0].t, endT: hours[167].t };
+  const vm = buildViewModel({ hours, evals, windows: [w], nearMisses: [], tz: "UTC", locale: "en-US", units: "metric" });
+  assert.equal(vm.bestSentence, "Best window: Sat, Sep 19 12 AM to Sat, Sep 26 12 AM (168 h)");
+  const short = { startIdx: 0, endIdx: 22, hours: 23, startT: hours[0].t, endT: hours[22].t };
+  const vm2 = buildViewModel({ hours, evals, windows: [short], nearMisses: [], tz: "UTC", locale: "en-US", units: "metric" });
+  assert.equal(vm2.bestSentence, "Best window: Sat 12 AM to 11 PM (23 h)"); // under 24 h keeps the compact form
+});
+
 test("windows list: chronological, one flagged best, each with a sentence", () => {
   const { vm } = build(2);
   assert.equal(vm.windows.length, 2);
@@ -120,6 +131,7 @@ test("cells carry index, t, label, ambiguous, and enriched fails", () => {
   assert.equal(cell.i, 13);
   assert.equal(cell.t, START_T + 13 * 3600);
   assert.equal(cell.label, "1 PM");
+  assert.equal(cell.hour, 13); // local hour 0..23, lets the grid place cells by column
   assert.equal(cell.ambiguous, false);
   assert.equal(cell.fails.length, 1);
   assert.equal(cell.fails[0].ruleId, "dry");
@@ -174,6 +186,7 @@ test("DST fall back: the repeated hour is ambiguous and labeled with the zone", 
   const day = vm.days.find((d) => d.dateKey === "2026-11-01");
   assert.deepEqual(day.cells.slice(0, 4).map((c) => c.label), ["12 AM", "1 AM", "1 AM EST", "2 AM"]);
   assert.deepEqual(day.cells.slice(0, 4).map((c) => c.ambiguous), [false, false, true, false]);
+  assert.deepEqual(day.cells.slice(0, 4).map((c) => c.hour), [0, 1, 1, 2]);
 });
 
 test("imperial units change fail text only, not the structure", () => {

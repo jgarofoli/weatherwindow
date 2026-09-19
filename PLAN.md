@@ -39,7 +39,7 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
 - [x] **M4 — Near-misses, ranking, view-model.** `findNearMisses`,
       `viewmodel.js`. Exit: S1 near-miss expectations pass; sentences
       deterministic.
-- [ ] **M5 — UI on fixtures, no network.** `index.html`, `style.css`,
+- [x] **M5 — UI on fixtures, no network.** `index.html`, `style.css`,
       `app.js`, `?fixture=name` dev flag. Exit: manual QA §13 items 1–6
       pass at phone width.
 - [ ] **M6 — Live data.** `geo.js`, `api.js` wired to UI, geolocation,
@@ -156,3 +156,49 @@ Reykjavik, open ocean at 0,-160), 2 geocodes, 2 error payloads, and
   (spec-conformant; e.g. a whole daylight period with gusts over the limit).
   The sentence says "for all N h". Consider whether the UI should demote
   those, since they're less actionable than partial misses.
+
+## M5 notes (UI on fixtures, 2026-09-19)
+
+Exit criteria (spec §13 items 1-6) verified in headless Chromium at 360 px by
+`npm run qa:browser` (`scripts/qa-browser.mjs`: no dependencies, own static
+server, `CHROME_BIN` or auto-detects a Playwright Chromium; Node 22+). It
+also checks keyboard navigation and that the console/CSP stay clean. M6
+should extend it for items 7-10. Also checked by hand in screenshots: dark
+mode, 900 px, and a fall-back DST day (25 columns, second 1 AM labeled
+"1 AM EST") using a temporary time-shifted fixture (not committed).
+
+- **Fixtures for the page:** `npm run dev:sync` (also run by `capture`) copies
+  `tests/fixtures/forecast-*.json` to `docs/dev/` plus `manifest.json` with the
+  capture time. In fixture mode "now" is that capture time (override with
+  `?now=<epoch>`), so views are deterministic. `?fixture=<name>` picks one;
+  with no flag the page defaults to `new-york`. Safe to leave in `docs/`.
+- **Deviations from the spec text, all deliberate:**
+  - CSP `connect-src` gains `'self'` so the page can fetch `./dev/*.json`.
+    Revisit at M7 whether to keep it.
+  - Result comes before Rules on the page (spec §1 "answer first"; §8 lists
+    rules first).
+  - View-model cells gained `hour` (local hour) so the grid can place cells by
+    column on 23/25-hour days. Windows of 24 h or more now name full dates
+    ("Sat, Sep 19 12 AM to Sat, Sep 26 12 AM"); without that, a week-long
+    window read as "Sat ... to Sat".
+  - The location card shows the sample's name and the attribution link; the
+    search box, "Use my location" and lat/lon fallback are M6 (no dead
+    controls in the meantime).
+- **Grid:** status colors are the fixed status palette (good/warning/critical)
+  with a glyph on every cell and a legend, so state is never color-alone.
+  Cells are ~9 px wide at 360 px (spec's known risk): the mitigation is in
+  (tap a day label for that day's hour list) plus arrow-key navigation with a
+  single tab stop instead of 168. Windows are marked with an underline bar.
+  Days that are entirely in the past are hidden.
+- **Rule editing:** inputs remember their canonical value in `data-canon`; only
+  the field you touch is rewritten, so display rounding (e.g. 84.2 F) never
+  leaks into stored thresholds. An invalid edit shows the validator's message
+  and keeps the last good result on screen.
+- **Horizon:** in fixture mode the horizon selector slices the loaded
+  forecast (1 past day + N days); a 14-day choice is a no-op on the 7-day
+  samples. Real refetching is M6.
+- **Saved rules** (localStorage `wwf:v1:saved`, max 20, validated on read) are
+  implemented. **JSON export/import backup (spec §9) is not**; deferred to M7
+  polish or v1.1.
+- Not covered by automation: the page doesn't react to hash edits made in the
+  same tab (only to a fresh load), which matches how links are shared.
