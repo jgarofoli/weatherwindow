@@ -33,7 +33,7 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
       Exit: parser + DST tests pass on real fixtures; §14 assumptions
       confirmed or spec amended. Kill/pivot check on null
       `precipitation_probability`/`dew_point_2m`.
-- [ ] **M3 — Rules, serialization, presets.** `rules.js`, `urlstate.js`,
+- [x] **M3 — Rules, serialization, presets.** `rules.js`, `urlstate.js`,
       `presets.js`. Exit: every preset validates and evaluates on the real
       fixture; round-trip encode/decode passes.
 - [ ] **M4 — Near-misses, ranking, view-model.** `findNearMisses`,
@@ -120,3 +120,20 @@ Reykjavik, open ocean at 0,-160), 2 geocodes, 2 error payloads, and
 - **CORS:** forecast, geocoding and marine hosts all return
   `access-control-allow-origin: *` (checked with curl and an `Origin`
   header). The real browser check is still spec §13 item 11 post-deploy.
+- 2026-09-19 (M3): `validateRuleSet` *rejects* out-of-range `horizonDays`,
+  duplicate/empty rule ids, and non-numeric `minHours` (ids identify
+  near-miss blockers, so they must be unique), but *clamps* `minHours` to
+  1..24 and dry `before`/`after` to integers 0..24, since those come from
+  hand-editable links. It returns a normalized copy (unknown fields dropped).
+- 2026-09-19 (M3): `units.js` gained unit *kinds* (`temp`, `tempDelta`,
+  `speed`, `precip`, `pct`, `uv`) with `toDisplay`/`fromDisplay`/
+  `displayNumber`/`roundTo`. `tempDelta` matters: a 3 °C dew-point margin is
+  5.4 °F, not 37.4 °F. `geo.js` exists with only `roundCoord`; the rest is M6.
+- 2026-09-19 (M3): `encodeState` leaves out `r` if the rule set is invalid,
+  so a half-typed edit can't break the URL; decode then falls back to the
+  default rules. Empty hash -> defaults with no warning (fresh visit); any
+  other unreadable input -> defaults plus a warning for the "Couldn't read
+  the shared link" banner. Hashes over 8000 chars are refused unparsed.
+- Open question for M5: in imperial, the 0.1 mm/h rain threshold displays as
+  "0.004 in/h". Correct but awkward; consider always showing precipitation in
+  mm, or a friendlier step for the inch input.
