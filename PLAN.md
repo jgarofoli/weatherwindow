@@ -36,7 +36,7 @@ Rule: don't start milestone N+1 until milestone N's exit criteria pass.
 - [x] **M3 — Rules, serialization, presets.** `rules.js`, `urlstate.js`,
       `presets.js`. Exit: every preset validates and evaluates on the real
       fixture; round-trip encode/decode passes.
-- [ ] **M4 — Near-misses, ranking, view-model.** `findNearMisses`,
+- [x] **M4 — Near-misses, ranking, view-model.** `findNearMisses`,
       `viewmodel.js`. Exit: S1 near-miss expectations pass; sentences
       deterministic.
 - [ ] **M5 — UI on fixtures, no network.** `index.html`, `style.css`,
@@ -137,3 +137,22 @@ Reykjavik, open ocean at 0,-160), 2 geocodes, 2 error payloads, and
 - Open question for M5: in imperial, the 0.1 mm/h rain threshold displays as
   "0.004 in/h". Correct but awkward; consider always showing precipitation in
   mm, or a friendlier step for the inch input.
+- 2026-09-19 (M4): `findNearMisses` and the S1 expectation (12..19, `dry`,
+  failCount 6) were already implemented and tested in M1, so M4 was the
+  view-model. `buildViewModel` takes an **optional `rules` array** beyond the
+  spec's input list: without it the hour detail can't say "Wind speed 31
+  km/h > 25 km/h" or name a blocker, so it falls back to the rule id. Each
+  cell's `fails[]` are engine fail records plus a `text` string.
+- 2026-09-19 (M4): near-misses are ranked in the view-model (not the engine):
+  fewest failing hours, then longest run, then earliest. Engine output order
+  is unchanged. The UI should show `nearMisses.slice(0, 3)` when no window.
+- 2026-09-19 (M4): window sentences run to the *end* of the last hour
+  (hours 6..11 -> "Sat 6 AM to 12 PM (6 h)"), and add the end weekday only
+  when the window crosses midnight. `hourLabel` now normalizes ICU's narrow
+  no-break space to a plain space, so sentences don't vary by runtime.
+  `rules.js` gained `ruleName` and `describeFail`; `timefmt.js` gained
+  `dayLabel`.
+- Note for M5: a near-miss can be a run where *every* hour fails one rule
+  (spec-conformant; e.g. a whole daylight period with gusts over the limit).
+  The sentence says "for all N h". Consider whether the UI should demote
+  those, since they're less actionable than partial misses.

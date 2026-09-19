@@ -82,3 +82,19 @@ test("hourLabel: ambiguous hour carries the tz abbreviation, and the two 1 AMs d
   assert.match(second, /EST/);
   assert.doesNotMatch(hourLabel(utc(2026, 9, 19, 19), NY, "en-US"), /EDT|EST/);
 });
+
+import { dayLabel } from "../docs/lib/timefmt.js";
+
+test("hourLabel: no narrow no-break space, so sentences are stable across ICU versions", () => {
+  const label = hourLabel(utc(2026, 9, 19, 19), NY, "en-US");
+  assert.doesNotMatch(label, /[  ]/);
+  assert.equal(label, "3 PM");
+});
+
+test("dayLabel: from calendar fields, independent of the runtime's timezone", () => {
+  const parts = localParts(utc(2026, 9, 19, 4), NY); // Saturday Sep 19
+  assert.equal(dayLabel(parts, "en-US", { weekday: "short" }), "Sat");
+  const full = dayLabel(parts, "en-US");
+  assert.match(full, /Sat/);
+  assert.match(full, /19/);
+});

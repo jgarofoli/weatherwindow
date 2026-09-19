@@ -176,3 +176,46 @@ test("50 °F entered in imperial stores 10 °C and displays back as 50", () => {
   assert.equal(toDisplay("temp", stored, "imperial"), 50);
   assert.match(describeRule(rule, "imperial"), /between 50 and/);
 });
+
+import { describeFail, ruleName } from "../docs/lib/rules.js";
+
+const R = {
+  wind: { id: "wind", type: "range", metric: "wind", max: 25 },
+  temp: { id: "temp", type: "range", metric: "temp", min: 10, max: 29 },
+  dew: { id: "dew", type: "dewMargin", min: 3 },
+  dry: { id: "dry", type: "dry", before: 4, after: 8, maxMm: 0.1, maxProb: 30 },
+  day: { id: "day", type: "daylight" },
+};
+
+test("ruleName: short labels for headings and blockers", () => {
+  assert.equal(ruleName(R.wind), "Wind speed");
+  assert.equal(ruleName(R.dew), "Dew-point margin");
+  assert.equal(ruleName(R.dry), "Dry spell");
+  assert.equal(ruleName(R.day), "Daylight");
+});
+
+test("describeFail: value vs limit, metric", () => {
+  assert.equal(describeFail({ ruleId: "wind", kind: "above", value: 31, limit: 25 }, R.wind, "metric"), "Wind speed 31 km/h > 25 km/h");
+  assert.equal(describeFail({ ruleId: "temp", kind: "below", value: 8, limit: 10 }, R.temp, "metric"), "Air temperature 8 °C < 10 °C");
+  assert.equal(describeFail({ ruleId: "dew", kind: "margin", value: 2, limit: 3 }, R.dew, "metric"), "Dew-point margin 2 °C < 3 °C");
+  assert.equal(describeFail({ ruleId: "dry", kind: "wet", value: 1, limit: 0.1 }, R.dry, "metric"), "Rain in dry window: 1 mm/h > 0.1 mm/h");
+  assert.equal(
+    describeFail({ ruleId: "dry", kind: "wet", value: 41, limit: 30, detail: "prob" }, R.dry, "metric"),
+    "Rain chance in dry window: 41% > 30%",
+  );
+  assert.equal(describeFail({ ruleId: "day", kind: "dark", value: 0, limit: 1 }, R.day, "metric"), "Not daylight");
+});
+
+test("describeFail: imperial converts value and limit; margin is a delta", () => {
+  assert.equal(describeFail({ ruleId: "wind", kind: "above", value: 31, limit: 25 }, R.wind, "imperial"), "Wind speed 19.3 mph > 15.5 mph");
+  assert.equal(describeFail({ ruleId: "dew", kind: "margin", value: 2, limit: 3 }, R.dew, "imperial"), "Dew-point margin 3.6 °F < 5.4 °F");
+});
+
+test("describeFail: no-data names the rule", () => {
+  assert.equal(describeFail({ ruleId: "wind", kind: "no-data", value: null, limit: null }, R.wind, "metric"), "No data for Wind speed");
+  assert.equal(describeFail({ ruleId: "dry", kind: "no-data", value: null, limit: 0.1 }, R.dry, "metric"), "No data for Dry spell");
+});
+
+test("describeFail: unknown rule falls back to the id and kind, never throws", () => {
+  assert.equal(describeFail({ ruleId: "ghost", kind: "above", value: 1, limit: 0 }, undefined, "metric"), "ghost: above");
+});

@@ -161,3 +161,48 @@ export function describeRule(rule, units = "metric") {
       throw new TypeError(`Unknown rule type: ${rule.type}`);
   }
 }
+
+// Short name for headings and "held back by ..." sentences.
+export function ruleName(rule) {
+  switch (rule.type) {
+    case "range":
+      return METRICS[rule.metric]?.label ?? rule.id;
+    case "dewMargin":
+      return "Dew-point margin";
+    case "dry":
+      return "Dry spell";
+    case "daylight":
+      return "Daylight";
+    default:
+      return rule.id;
+  }
+}
+
+// One failing hour, as "value vs limit" text. `rule` may be undefined (e.g. a link whose rules were
+// dropped); then we fall back to the id and kind rather than throw.
+export function describeFail(fail, rule, units = "metric") {
+  if (!rule) return `${fail.ruleId}: ${fail.kind}`;
+  const name = ruleName(rule);
+  const num = (kind, v) => withUnit(displayNumber(kind, v, units), unitLabel(kind, units));
+  const rain = (v) => `${displayNumber("precip", v, units)} ${unitLabel("precip", units)}/h`;
+  switch (fail.kind) {
+    case "no-data":
+      return `No data for ${name}`;
+    case "above":
+    case "below": {
+      const kind = METRICS[rule.metric]?.kind;
+      if (!kind) return `${name}: ${fail.kind}`;
+      return `${name} ${num(kind, fail.value)} ${fail.kind === "above" ? ">" : "<"} ${num(kind, fail.limit)}`;
+    }
+    case "margin":
+      return `${name} ${num("tempDelta", fail.value)} < ${num("tempDelta", fail.limit)}`;
+    case "wet":
+      return fail.detail === "prob"
+        ? `Rain chance in dry window: ${fail.value}% > ${fail.limit}%`
+        : `Rain in dry window: ${rain(fail.value)} > ${rain(fail.limit)}`;
+    case "dark":
+      return "Not daylight";
+    default:
+      return `${name}: ${fail.kind}`;
+  }
+}
