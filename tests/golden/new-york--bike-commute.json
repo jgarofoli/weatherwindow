@@ -1,0 +1,75 @@
+{
+ "fixture": "forecast-new-york.json",
+ "preset": "bike-commute",
+ "nowT": 1789791297,
+ "minHours": 1,
+ "hours": 192,
+ "pattern": "PPPPPPPPPPPPPPPPPPPPPPPPPPP1111PPPPPPPPPPPPPPPPPPP11PPP11111111111111111112222222PPPPPPPPPPPPPPPPPPP11222222222222222222222222222221112222111111111111111111111111111112222211PPPPPPPP1111111PP1",
+ "windows": [
+  {
+   "startIdx": 24,
+   "endIdx": 26,
+   "hours": 3,
+   "startT": 1789790400,
+   "endT": 1789797600
+  },
+  {
+   "startIdx": 31,
+   "endIdx": 49,
+   "hours": 19,
+   "startT": 1789815600,
+   "endT": 1789880400
+  },
+  {
+   "startIdx": 52,
+   "endIdx": 54,
+   "hours": 3,
+   "startT": 1789891200,
+   "endT": 1789898400
+  },
+  {
+   "startIdx": 81,
+   "endIdx": 99,
+   "hours": 19,
+   "startT": 1789995600,
+   "endT": 1790060400
+  },
+  {
+   "startIdx": 174,
+   "endIdx": 181,
+   "hours": 8,
+   "startT": 1790330400,
+   "endT": 1790355600
+  },
+  {
+   "startIdx": 189,
+   "endIdx": 190,
+   "hours": 2,
+   "startT": 1790384400,
+   "endT": 1790388000
+  }
+ ],
+ "best": {
+  "startIdx": 31,
+  "endIdx": 49,
+  "hours": 19,
+  "startT": 1789815600,
+  "endT": 1789880400
+ },
+ "nearMisses": [
+  {
+   "startIdx": 131,
+   "endIdx": 133,
+   "hours": 3,
+   "blockingRuleId": "gust",
+   "failCount": 3
+  },
+  {
+   "startIdx": 138,
+   "endIdx": 166,
+   "hours": 29,
+   "blockingRuleId": "gust",
+   "failCount": 29
+  }
+ ]
+}

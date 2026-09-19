@@ -1,0 +1,61 @@
+{
+ "fixture": "forecast-new-york.json",
+ "preset": "laundry",
+ "nowT": 1789791297,
+ "minHours": 4,
+ "hours": 192,
+ "pattern": "2222222111111PPPPPP111111112111PPPPPPPPPPPP111122233333222222222222333332222222111PPPPPPPPP1111112222332222222222223333333333332222222222212222222222221111111PPPPP12223333333211112111122233333",
+ "windows": [
+  {
+   "startIdx": 31,
+   "endIdx": 42,
+   "hours": 12,
+   "startT": 1789815600,
+   "endT": 1789855200
+  },
+  {
+   "startIdx": 82,
+   "endIdx": 90,
+   "hours": 9,
+   "startT": 1789999200,
+   "endT": 1790028000
+  },
+  {
+   "startIdx": 158,
+   "endIdx": 162,
+   "hours": 5,
+   "startT": 1790272800,
+   "endT": 1790287200
+  }
+ ],
+ "best": {
+  "startIdx": 31,
+  "endIdx": 42,
+  "hours": 12,
+  "startT": 1789815600,
+  "endT": 1789855200
+ },
+ "nearMisses": [
+  {
+   "startIdx": 91,
+   "endIdx": 96,
+   "hours": 6,
+   "blockingRuleId": "day",
+   "failCount": 6
+  },
+  {
+   "startIdx": 175,
+   "endIdx": 178,
+   "hours": 4,
+   "blockingRuleId": "rh",
+   "failCount": 4
+  },
+  {
+   "startIdx": 180,
+   "endIdx": 183,
+   "hours": 4,
+   "blockingRuleId": "dry",
+   "failCount": 4
+  }
+ ]
+}

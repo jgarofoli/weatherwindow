@@ -1,0 +1,61 @@
+{
+ "fixture": "forecast-sydney.json",
+ "preset": "paint-exterior",
+ "nowT": 1789791297,
+ "minHours": 6,
+ "hours": 192,
+ "pattern": "45554433PPPPPPPPPP111111111111PPPPPPPPPPPP111111111111PPPPPPPPPPPP111111111111PPPPP2222221222222222222111111111111344444444333222PPPPPPPPP1233332222221PPPPPPPPPPP111111111221PPPPPPPPPP11222344",
+ "windows": [
+  {
+   "startIdx": 54,
+   "endIdx": 65,
+   "hours": 12,
+   "startT": 1789848000,
+   "endT": 1789887600
+  },
+  {
+   "startIdx": 129,
+   "endIdx": 137,
+   "hours": 9,
+   "startT": 1790118000,
+   "endT": 1790146800
+  },
+  {
+   "startIdx": 151,
+   "endIdx": 161,
+   "hours": 11,
+   "startT": 1790197200,
+   "endT": 1790233200
+  },
+  {
+   "startIdx": 174,
+   "endIdx": 183,
+   "hours": 10,
+   "startT": 1790280000,
+   "endT": 1790312400
+  }
+ ],
+ "best": {
+  "startIdx": 54,
+  "endIdx": 65,
+  "hours": 12,
+  "startT": 1789848000,
+  "endT": 1789887600
+ },
+ "nearMisses": [
+  {
+   "startIdx": 102,
+   "endIdx": 113,
+   "hours": 12,
+   "blockingRuleId": "dry",
+   "failCount": 12
+  },
+  {
+   "startIdx": 162,
+   "endIdx": 170,
+   "hours": 9,
+   "blockingRuleId": "day",
+   "failCount": 9
+  }
+ ]
+}

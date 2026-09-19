@@ -10,6 +10,7 @@
     "capture": "node scripts/capture-fixture.mjs && node scripts/sync-dev-fixtures.mjs",
     "dev:sync": "node scripts/sync-dev-fixtures.mjs",
     "qa:browser": "node scripts/qa-browser.mjs",
+    "smoke:deployed": "node scripts/smoke-deployed.mjs",
     "golden:update": "UPDATE_GOLDEN=1 node --test tests/golden.test.js"
   }
 }

@@ -1,80 +1,43 @@
 // Automates spec §13 manual QA items 1-10 (plus keyboard nav) in headless Chromium, no dependencies.
 // Open-Meteo requests are intercepted and answered from tests/fixtures (or a fake 429 / dropped connection),
 // so the run is deterministic and never touches the real API. Date.now is pinned to the fixtures' capture time.
-// Usage: npm run qa:browser   (needs Node 22+ for the global WebSocket, and a Chromium/Chrome binary)
-// Chromium: set CHROME_BIN, or it looks for a Playwright-installed chrome-headless-shell / chrome.
-import { spawn } from "node:child_process";
+// Usage: npm run qa:browser   (needs Node 22+ and a Chromium; see scripts/cdp.mjs for how it is found)
 import { createServer } from "node:http";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import os from "node:os";
+import { launchChrome, sleep } from "./cdp.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DOCS = path.join(ROOT, "docs");
 const FIXTURES = path.join(ROOT, "tests", "fixtures");
 const CAPTURED_AT = Date.parse(JSON.parse(readFileSync(path.join(FIXTURES, "_meta.json"), "utf8")).capturedAt);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const sleepMs = sleep;
 
-function findChrome() {
-  if (process.env.CHROME_BIN) return process.env.CHROME_BIN;
-  const pw = path.join(os.homedir(), ".cache", "ms-playwright");
-  if (existsSync(pw)) {
-    for (const dir of readdirSync(pw).sort().reverse()) {
-      for (const rel of [`chrome-headless-shell-linux64/chrome-headless-shell`, `chrome-linux64/chrome`, `chrome-linux/chrome`]) {
-        const p = path.join(pw, dir, rel);
-        if (dir.startsWith("chromium") && existsSync(p)) return p;
-      }
-    }
-  }
-  throw new Error("No Chromium found. Set CHROME_BIN=/path/to/chrome.");
-}
-
+// Serves docs/ under /weatherwindow/ like a GitHub Pages project site, so any absolute path (/lib/x.js)
+// would 404 here exactly as it would on the real site (spec §2).
+const PREFIX = "/weatherwindow";
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json" };
 function serve() {
   const server = createServer((req, res) => {
     const url = new URL(req.url, "http://x");
-    const file = path.join(DOCS, url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname));
+    if (!url.pathname.startsWith(`${PREFIX}/`)) return void res.writeHead(404).end();
+    const rel = decodeURIComponent(url.pathname.slice(PREFIX.length));
+    const file = path.join(DOCS, rel === "/" ? "index.html" : rel);
     if (!file.startsWith(DOCS) || !existsSync(file)) return void res.writeHead(404).end();
     res.writeHead(200, { "content-type": TYPES[path.extname(file)] ?? "application/octet-stream" }).end(readFileSync(file));
   });
   return new Promise((r) => server.listen(0, "127.0.0.1", () => r(server)));
 }
 
-async function launch(port) {
-  const proc = spawn(findChrome(), [`--remote-debugging-port=${port}`, "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "about:blank"], { stdio: "ignore" });
-  let page;
-  for (let i = 0; i < 60 && !page; i++) {
-    try { page = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find((t) => t.type === "page"); } catch {}
-    if (!page) await sleep(100);
-  }
-  if (!page) throw new Error("Chromium did not start");
-  const ws = new WebSocket(page.webSocketDebuggerUrl);
-  await new Promise((r) => (ws.onopen = r));
-  let id = 0;
-  const pending = new Map();
-  const logs = [];
-  const handlers = new Map();
-  ws.onmessage = (m) => {
-    const msg = JSON.parse(m.data);
-    if (handlers.has(msg.method)) handlers.get(msg.method)(msg.params);
-    if (msg.id && pending.has(msg.id)) {
-      const { res, rej } = pending.get(msg.id);
-      pending.delete(msg.id);
-      msg.error ? rej(new Error(JSON.stringify(msg.error))) : res(msg.result);
-    } else if (msg.method === "Runtime.consoleAPICalled" && ["error", "warning"].includes(msg.params.type)) {
-      logs.push(`console.${msg.params.type}: ${msg.params.args.map((a) => a.value ?? a.description).join(" ")}`);
-    } else if (msg.method === "Runtime.exceptionThrown") logs.push(`EXCEPTION: ${msg.params.exceptionDetails.exception?.description ?? msg.params.exceptionDetails.text}`);
-    else if (msg.method === "Log.entryAdded" && msg.params.entry.level !== "info") logs.push(`log.${msg.params.entry.level}: ${msg.params.entry.text}`);
-  };
-  const send = (method, params = {}) => new Promise((res, rej) => { const i = ++id; pending.set(i, { res, rej }); ws.send(JSON.stringify({ id: i, method, params })); });
-  await Promise.all([send("Page.enable"), send("Runtime.enable"), send("Log.enable")]);
+// A browser whose Open-Meteo traffic is answered from tests/fixtures, and whose clock is pinned to the capture time.
+// mock.forecast: "ok" | "offline" | "429" | "400". Geocoding always answers with the Springfield capture.
+async function launch() {
+  const b = await launchChrome();
+  const { send } = b;
   await send("Page.addScriptToEvaluateOnNewDocument", {
     source: `(() => { const real = Date.now.bind(Date); const t0 = real(); Date.now = () => ${CAPTURED_AT} + (real() - t0); })();`,
   });
-
-  // Fake Open-Meteo. mock.forecast: "ok" | "offline" | "429" | "400". Geocoding always answers with the Springfield capture.
   const mock = { forecast: "ok", requests: [] };
   const CORS = [{ name: "access-control-allow-origin", value: "*" }, { name: "content-type", value: "application/json" }];
   const answer = (requestId, file, responseCode = 200, body) =>
@@ -82,7 +45,7 @@ async function launch(port) {
       requestId, responseCode, responseHeaders: CORS,
       body: (body ?? readFileSync(path.join(FIXTURES, file))).toString("base64"),
     });
-  handlers.set("Fetch.requestPaused", ({ requestId, request }) => {
+  b.on("Fetch.requestPaused", ({ requestId, request }) => {
     const url = new URL(request.url);
     mock.requests.push(url.href);
     if (url.hostname.startsWith("geocoding")) return answer(requestId, "geocode-springfield.json");
@@ -92,48 +55,13 @@ async function launch(port) {
     return answer(requestId, "forecast-new-york.json");
   });
   await send("Fetch.enable", { patterns: [{ urlPattern: "https://*.open-meteo.com/*" }] });
-  await send("Emulation.setDeviceMetricsOverride", { width: 360, height: 900, deviceScaleFactor: 1, mobile: true });
-
-  const b = {
-    logs,
-    send,
+  const goto = b.goto;
+  return Object.assign(b, {
     mock,
     forecastRequests: () => mock.requests.filter((u) => u.includes("api.open-meteo.com")),
     geocodeRequests: () => mock.requests.filter((u) => u.includes("geocoding-api")),
-    async eval(expr) {
-      const r = await send("Runtime.evaluate", { expression: expr, returnByValue: true, awaitPromise: true });
-      if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
-      return r.result.value;
-    },
-    async waitFor(expr, ms = 5000) {
-      for (const t = Date.now(); Date.now() - t < ms; await sleep(50)) if (await b.eval(expr)) return;
-      throw new Error(`timeout waiting for ${expr}`);
-    },
-    async goto(url) {
-      await send("Page.navigate", { url });
-      await sleep(300);
-      await b.waitFor("document.readyState==='complete' && document.getElementById('best')?.textContent.length>0");
-    },
-    async click(sel) {
-      const r = await b.eval(`(()=>{const e=document.querySelector(${JSON.stringify(sel)}); if(!e) return null; e.scrollIntoView({block:'center'}); const r=e.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
-      if (!r) throw new Error(`no element ${sel}`);
-      for (const type of ["mousePressed", "mouseReleased"]) await send("Input.dispatchMouseEvent", { type, x: r.x, y: r.y, button: "left", clickCount: 1 });
-      await sleep(100);
-    },
-    async type(sel, text) {
-      await b.eval(`(()=>{const e=document.querySelector(${JSON.stringify(sel)}); e.focus(); e.select();})()`);
-      for (const type of ["keyDown", "keyUp"]) await send("Input.dispatchKeyEvent", { type, key: "Backspace", code: "Backspace", windowsVirtualKeyCode: 8 });
-      if (text) await send("Input.insertText", { text });
-      await sleep(100);
-    },
-    async key(key) {
-      const vk = { ArrowRight: 39, ArrowLeft: 37, ArrowDown: 40, ArrowUp: 38 }[key];
-      for (const type of ["keyDown", "keyUp"]) await send("Input.dispatchKeyEvent", { type, key, code: key, windowsVirtualKeyCode: vk });
-      await sleep(100);
-    },
-    close() { try { ws.close(); } catch {} proc.kill(); },
-  };
-  return b;
+    goto: (url) => goto(url, "document.getElementById('best')?.textContent.length>0", 5000),
+  });
 }
 
 let failed = 0;
@@ -143,9 +71,8 @@ const check = (name, ok, detail = "") => {
 };
 
 const server = await serve();
-const base = `http://127.0.0.1:${server.address().port}/`;
-const b = await launch(9400 + Math.floor(Math.random() * 500));
-const b2 = { current: null };
+const base = `http://127.0.0.1:${server.address().port}${PREFIX}/`;
+const b = await launch();
 const text = (sel) => b.eval(`document.querySelector(${JSON.stringify(sel)})?.textContent ?? null`);
 const hashParam = (k) => b.eval(`new URLSearchParams(location.hash.slice(1)).get(${JSON.stringify(k)})`);
 const snapshot = (page) => page.eval(`JSON.stringify({loc: document.getElementById('loc-name').textContent, best: document.getElementById('best').textContent, windows: document.getElementById('windows').textContent, inputs: [...document.querySelectorAll('.rule input.num')].map(i=>i.value)})`);
@@ -190,7 +117,7 @@ try {
   const url = await b.eval("location.href");
   check("5a. Copy link reports success", /copied/i.test(await text("#action-status")), await text("#action-status"));
   const snap1 = await snapshot(b);
-  const fresh = await launch(9400 + Math.floor(Math.random() * 500) + 500); // fresh profile = fresh tab with no saved state
+  const fresh = await launch(); // fresh profile = fresh tab with no saved state
   await fresh.goto(url);
   check("5b. link in a fresh browser shows same location, rules and result", snap1 === (await snapshot(fresh)), `${url.length} chars`);
   if (fresh.logs.length) check("5c. fresh tab has no console errors", false, fresh.logs.join(" | "));
@@ -249,7 +176,7 @@ try {
   await b.type('.rule[data-id="wind"] input[data-field="max"]', "25");
 
   // a shared live link opens in a fresh browser: same place, same result
-  const fresh2 = await launch(9400 + Math.floor(Math.random() * 500) + 1000);
+  const fresh2 = await launch();
   await fresh2.goto(liveHref);
   await fresh2.waitFor("!document.getElementById('result-body').hidden");
   check("7i. shared live link reproduces location and result in a fresh browser",

@@ -1,0 +1,53 @@
+{
+ "fixture": "forecast-denver.json",
+ "preset": "bike-commute",
+ "nowT": 1789791297,
+ "minHours": 1,
+ "hours": 192,
+ "pattern": "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP1111PPPPPPPPPPPPPPPPPPPPP1PPPPPPPPPPPPPPPPPPP1111111111111PPPPPPPPPPPPPPPPPPP11PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP1111P1",
+ "windows": [
+  {
+   "startIdx": 46,
+   "endIdx": 63,
+   "hours": 18,
+   "startT": 1789790400,
+   "endT": 1789851600
+  },
+  {
+   "startIdx": 65,
+   "endIdx": 83,
+   "hours": 19,
+   "startT": 1789858800,
+   "endT": 1789923600
+  },
+  {
+   "startIdx": 97,
+   "endIdx": 115,
+   "hours": 19,
+   "startT": 1789974000,
+   "endT": 1790038800
+  },
+  {
+   "startIdx": 118,
+   "endIdx": 185,
+   "hours": 68,
+   "startT": 1790049600,
+   "endT": 1790290800
+  },
+  {
+   "startIdx": 190,
+   "endIdx": 190,
+   "hours": 1,
+   "startT": 1790308800,
+   "endT": 1790308800
+  }
+ ],
+ "best": {
+  "startIdx": 118,
+  "endIdx": 185,
+  "hours": 68,
+  "startT": 1790049600,
+  "endT": 1790290800
+ },
+ "nearMisses": []
+}

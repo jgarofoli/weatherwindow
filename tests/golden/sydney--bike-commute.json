@@ -1,0 +1,60 @@
+{
+ "fixture": "forecast-sydney.json",
+ "preset": "bike-commute",
+ "nowT": 1789791297,
+ "minHours": 1,
+ "hours": 192,
+ "pattern": "PPPPPPPPPPPPPPPPPPPPPPPPPP111PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP111111112222222PPPPPPPP111111111111111111111PP111111111PPPP111PPPPPPPPP11111111111111111PPPPPPPPPPPP1111111112",
+ "windows": [
+  {
+   "startIdx": 38,
+   "endIdx": 81,
+   "hours": 44,
+   "startT": 1789790400,
+   "endT": 1789945200
+  },
+  {
+   "startIdx": 97,
+   "endIdx": 104,
+   "hours": 8,
+   "startT": 1790002800,
+   "endT": 1790028000
+  },
+  {
+   "startIdx": 126,
+   "endIdx": 127,
+   "hours": 2,
+   "startT": 1790107200,
+   "endT": 1790110800
+  },
+  {
+   "startIdx": 137,
+   "endIdx": 140,
+   "hours": 4,
+   "startT": 1790146800,
+   "endT": 1790157600
+  },
+  {
+   "startIdx": 144,
+   "endIdx": 152,
+   "hours": 9,
+   "startT": 1790172000,
+   "endT": 1790200800
+  },
+  {
+   "startIdx": 170,
+   "endIdx": 181,
+   "hours": 12,
+   "startT": 1790265600,
+   "endT": 1790305200
+  }
+ ],
+ "best": {
+  "startIdx": 38,
+  "endIdx": 81,
+  "hours": 44,
+  "startT": 1789790400,
+  "endT": 1789945200
+ },
+ "nearMisses": []
+}

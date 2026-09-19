@@ -1,0 +1,54 @@
+{
+ "fixture": "forecast-new-york.json",
+ "preset": "paint-exterior",
+ "nowT": 1789791297,
+ "minHours": 6,
+ "hours": 192,
+ "pattern": "2244333222PPPPPPPPP111111111111PPPPPPPPPPPP222222222222123333333233444444444111PPPPPPPPPPPP11222222222211111124444454555545545544443322222233322222222211111111P11233322222344421111111112344322",
+ "windows": [
+  {
+   "startIdx": 31,
+   "endIdx": 42,
+   "hours": 12,
+   "startT": 1789815600,
+   "endT": 1789855200
+  },
+  {
+   "startIdx": 79,
+   "endIdx": 90,
+   "hours": 12,
+   "startT": 1789988400,
+   "endT": 1790028000
+  }
+ ],
+ "best": {
+  "startIdx": 31,
+  "endIdx": 42,
+  "hours": 12,
+  "startT": 1789815600,
+  "endT": 1789855200
+ },
+ "nearMisses": [
+  {
+   "startIdx": 103,
+   "endIdx": 108,
+   "hours": 6,
+   "blockingRuleId": "dry",
+   "failCount": 6
+  },
+  {
+   "startIdx": 151,
+   "endIdx": 159,
+   "hours": 9,
+   "blockingRuleId": "wind",
+   "failCount": 8
+  },
+  {
+   "startIdx": 176,
+   "endIdx": 184,
+   "hours": 9,
+   "blockingRuleId": "dry",
+   "failCount": 9
+  }
+ ]
+}

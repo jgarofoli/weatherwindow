@@ -1,0 +1,19 @@
+{
+ "fixture": "forecast-reykjavik.json",
+ "preset": "laundry",
+ "nowT": 1789791297,
+ "minHours": 4,
+ "hours": 192,
+ "pattern": "333333322223333322222233233333332222222222223333333444442221121111112233333444443333333333334444444444443333333333334433333444443333333333323333333444443333333333323333333333332222222222224444",
+ "windows": [],
+ "best": null,
+ "nearMisses": [
+  {
+   "startIdx": 62,
+   "endIdx": 67,
+   "hours": 6,
+   "blockingRuleId": "temp",
+   "failCount": 6
+  }
+ ]
+}

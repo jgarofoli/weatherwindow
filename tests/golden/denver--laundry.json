@@ -1,0 +1,75 @@
+{
+ "fixture": "forecast-denver.json",
+ "preset": "laundry",
+ "nowT": 1789791297,
+ "minHours": 4,
+ "hours": 192,
+ "pattern": "1111122PPPPPPPPPPPPP11111111222111PPPPPPPPPP2111122222211PPPPPPPPPPP22222333333221PPPPP1111222111111111PPPPPPPPPP11222111111111PPPPPPPPPPPP111111111111PPPPPPPPPPPP111111111111PPPPPPPP111122222",
+ "windows": [
+  {
+   "startIdx": 57,
+   "endIdx": 67,
+   "hours": 11,
+   "startT": 1789830000,
+   "endT": 1789866000
+  },
+  {
+   "startIdx": 82,
+   "endIdx": 86,
+   "hours": 5,
+   "startT": 1789920000,
+   "endT": 1789934400
+  },
+  {
+   "startIdx": 103,
+   "endIdx": 112,
+   "hours": 10,
+   "startT": 1789995600,
+   "endT": 1790028000
+  },
+  {
+   "startIdx": 127,
+   "endIdx": 138,
+   "hours": 12,
+   "startT": 1790082000,
+   "endT": 1790121600
+  },
+  {
+   "startIdx": 151,
+   "endIdx": 162,
+   "hours": 12,
+   "startT": 1790168400,
+   "endT": 1790208000
+  },
+  {
+   "startIdx": 175,
+   "endIdx": 182,
+   "hours": 8,
+   "startT": 1790254800,
+   "endT": 1790280000
+  }
+ ],
+ "best": {
+  "startIdx": 127,
+  "endIdx": 138,
+  "hours": 12,
+  "startT": 1790082000,
+  "endT": 1790121600
+ },
+ "nearMisses": [
+  {
+   "startIdx": 87,
+   "endIdx": 90,
+   "hours": 4,
+   "blockingRuleId": "dry",
+   "failCount": 4
+  },
+  {
+   "startIdx": 183,
+   "endIdx": 186,
+   "hours": 4,
+   "blockingRuleId": "dry",
+   "failCount": 4
+  }
+ ]
+}
