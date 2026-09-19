@@ -1,0 +1,13 @@
+{
+  "name": "weatherwindow",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:watch": "node --test --watch tests/*.test.js",
+    "serve": "python3 -m http.server 8000 --directory docs",
+    "capture": "node scripts/capture-fixture.mjs",
+    "golden:update": "UPDATE_GOLDEN=1 node --test tests/golden.test.js"
+  }
+}
