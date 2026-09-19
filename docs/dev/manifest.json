@@ -1,0 +1,25 @@
+{
+ "capturedAt": "2026-09-19T04:14:57.413Z",
+ "fixtures": [
+  {
+   "name": "denver",
+   "label": "Denver"
+  },
+  {
+   "name": "mid-pacific",
+   "label": "Open ocean (mid-Pacific)"
+  },
+  {
+   "name": "new-york",
+   "label": "New York"
+  },
+  {
+   "name": "reykjavik",
+   "label": "Reykjavik"
+  },
+  {
+   "name": "sydney",
+   "label": "Sydney"
+  }
+ ]
+}

@@ -29,6 +29,7 @@ export function buildViewModel({ hours, evals, windows, nearMisses, tz, locale, 
       return {
         i: c.i,
         t: c.t,
+        hour: c.hour,
         state,
         label,
         ambiguous: c.ambiguous,
@@ -38,6 +39,7 @@ export function buildViewModel({ hours, evals, windows, nearMisses, tz, locale, 
   }));
 
   // "Sat 9 AM to 3 PM": a run of hours startIdx..endIdx ends at the *end* of its last hour.
+  // Runs of a day or more name the full date ("Sat, Sep 19 ... to Sat, Sep 26 ...") since bare weekdays repeat.
   function rangeText(startIdx, endIdx) {
     const startT = hours[startIdx].t;
     const endT = hours[endIdx].t + 3600;
@@ -45,9 +47,10 @@ export function buildViewModel({ hours, evals, windows, nearMisses, tz, locale, 
     const endLabel = next && next.t === endT ? labelAt.get(endIdx + 1) : hourLabel(endT, tz, locale);
     const s = localParts(startT, tz);
     const e = localParts(endT, tz);
-    const weekday = (p) => dayLabel(p, locale, { weekday: "short" });
-    const end = s.dateKey === e.dateKey ? endLabel : `${weekday(e)} ${endLabel}`;
-    return `${weekday(s)} ${labelAt.get(startIdx)} to ${end}`;
+    const long = endIdx - startIdx + 1 >= 24;
+    const day = (p) => (long ? dayLabel(p, locale) : dayLabel(p, locale, { weekday: "short" }));
+    const end = s.dateKey === e.dateKey && !long ? endLabel : `${day(e)} ${endLabel}`;
+    return `${day(s)} ${labelAt.get(startIdx)} to ${end}`;
   }
 
   const best = pickBest(windows);

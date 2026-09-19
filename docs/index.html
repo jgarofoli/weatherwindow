@@ -3,10 +3,105 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; base-uri 'none'; form-action 'none'"
+    />
     <title>Weather Window Finder</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./app.js"></script>
   </head>
   <body>
-    <h1>Weather Window Finder</h1>
-    <p>Under construction.</p>
+    <main>
+      <header>
+        <h1>Weather Window Finder</h1>
+        <p class="tagline">Find the hours when all your rules hold at once.</p>
+      </header>
+
+      <p id="banner" class="banner" role="status" hidden></p>
+
+      <section class="card" aria-labelledby="loc-h">
+        <h2 id="loc-h">Location</h2>
+        <p id="loc-name" class="loc-name"></p>
+        <p class="attr"><a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com</a></p>
+        <p id="dev-fixture" class="dev" hidden>
+          <label>Sample data <select id="fixture-select"></select></label>
+        </p>
+      </section>
+
+      <section class="card" aria-labelledby="result-h">
+        <h2 id="result-h">Result</h2>
+        <p id="best" class="best" role="status"></p>
+        <ul class="legend" aria-label="Legend">
+          <li><span class="key state-pass" aria-hidden="true">✓</span> All rules pass</li>
+          <li><span class="key state-near" aria-hidden="true">~</span> One rule fails</li>
+          <li><span class="key state-fail" aria-hidden="true">✕</span> Fails</li>
+          <li><span class="key state-past" aria-hidden="true">·</span> Past</li>
+          <li><span class="key key-window" aria-hidden="true"></span> In a window</li>
+        </ul>
+        <div id="grid" class="grid" role="group" aria-label="Hourly results by day. Arrow keys move between hours."></div>
+        <div id="detail" class="detail" aria-live="polite" hidden></div>
+        <h3>Windows</h3>
+        <ol id="windows" class="plain"></ol>
+        <h3>Closest misses</h3>
+        <ol id="misses" class="plain"></ol>
+      </section>
+
+      <section class="card" aria-labelledby="rules-h">
+        <h2 id="rules-h">Rules</h2>
+        <div class="field">
+          <label for="preset">Start from</label>
+          <select id="preset"></select>
+        </div>
+        <p id="preset-notes" class="notes"></p>
+
+        <ul id="rule-list" class="rule-list"></ul>
+        <p id="no-rules" class="notes" hidden>
+          No rules. Every hour counts as a pass, so only the minimum window length applies.
+        </p>
+        <p id="rule-errors" class="errors" role="alert" hidden></p>
+
+        <div class="field inline">
+          <label for="add-rule">Add rule</label>
+          <select id="add-rule"></select>
+          <button type="button" id="add-rule-btn">Add</button>
+        </div>
+
+        <div class="settings">
+          <div class="field">
+            <label for="min-hours">Minimum window (hours)</label>
+            <input id="min-hours" class="num" type="number" min="1" max="24" step="1" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="horizon">Look ahead</label>
+            <select id="horizon"></select>
+          </div>
+          <fieldset class="field units">
+            <legend>Units</legend>
+            <label><input type="radio" name="units" value="metric" /> Metric</label>
+            <label><input type="radio" name="units" value="imperial" /> Imperial</label>
+          </fieldset>
+        </div>
+
+        <div class="actions">
+          <div class="field inline">
+            <label for="save-name">Save as</label>
+            <input id="save-name" type="text" maxlength="40" autocomplete="off" />
+            <button type="button" id="save-btn">Save rules</button>
+          </div>
+          <button type="button" id="delete-saved" hidden>Delete this saved set</button>
+          <button type="button" id="copy-link">Copy link</button>
+        </div>
+        <p id="action-status" class="notes" role="status"></p>
+      </section>
+
+      <footer>
+        <p>
+          Decision aid, not a guarantee. Forecast skill drops with lead time. Presets are starting points; check your
+          product's datasheet.
+        </p>
+      </footer>
+    </main>
   </body>
 </html>
